@@ -108,6 +108,9 @@ there instead.
 
 ## Use it on your phone (hosting)
 
+> **Live now:** <https://gufghu91-cpu.github.io/flight-ticket-generator/>
+> served straight from this repo's `main` branch via GitHub Pages.
+
 The app is static — seven files, no build step, no server code — so any free
 static host works. Your phone can't open `index.html` off your PC the way your
 PC can, so hosting is how you get a URL your phone can load anywhere.
@@ -146,6 +149,12 @@ To pick your own name: *Site settings → Change site name*.
 3. Repo → **Settings → Pages → Build and deployment**:
    Source = *Deploy from a branch*, Branch = `main` / `root`, Save.
 4. Your app is at `https://<you>.github.io/flight-ticket-generator/`.
+
+**This repo is already wired up that way.** The whole project (not just
+`deploy/`) sits at the repo root and Pages serves it fine — `dev/` is only a
+bunch of static test scripts that nothing loads unless you ask for them, and
+`deploy/` + the zip are gitignored as generated artifacts. Push to `main` and
+Pages republishes automatically.
 
 **Verified:** the full test suite passes when served from a nested subpath
 (`…/demo-repo/`), not just a domain root — so a GitHub Pages project URL
