@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sample Flight Itinerary Generator</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="app-head">
+  <div>
+    <h1>Sample Flight Itinerary Generator</h1>
+    <p class="sub">Creates sample itineraries for travel planning, design mockups, and testing.</p>
+  </div>
+  <div class="head-right">
+    <span class="src-badge demo" id="srcBadge">Demo data</span>
+    <button class="ghost" id="settingsBtn">Flight data settings</button>
+  </div>
+</header>
+
+<!-- ============ FLIGHT DATA SETTINGS ============ -->
+<section class="panel settings" id="settingsPanel" hidden>
+  <h2>Flight data</h2>
+
+  <div class="field">
+    <label for="apiProvider">Data source</label>
+    <select id="apiProvider">
+      <option value="demo">Demo data (no key required)</option>
+      <option value="aviationstack">Aviationstack — free tier, 100 requests/month</option>
+      <option value="tequila">Kiwi.com Tequila / Tequila-compatible proxy</option>
+    </select>
+  </div>
+
+  <div id="apiKeyBlock">
+    <div class="field">
+      <label for="apiKey">API key — <a id="apiSignup" href="https://aviationstack.com/" target="_blank" rel="noopener">get one</a></label>
+      <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="paste your API key" />
+      <div class="hint">Kept in this browser's localStorage only — never in the page source.</div>
+    </div>
+
+    <div class="field" id="endpointBlock" hidden>
+      <label for="apiEndpoint">API base URL</label>
+      <input id="apiEndpoint" spellcheck="false" />
+      <div class="hint">Only change this if you use your own proxy or an approved partner endpoint.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="apiCurrency">Currency shown in results</label>
+    <input id="apiCurrency" maxlength="3" spellcheck="false" value="USD" style="max-width:110px" />
+  </div>
+
+  <div class="buttons">
+    <button class="ghost" id="apiTest">Test connection</button>
+    <button class="ghost" id="apiClear">Clear key</button>
+  </div>
+
+  <div class="api-status" id="apiStatus"></div>
+  <p class="api-note" id="apiNote"></p>
+</section>
+
+<div class="layout">
+
+  <!-- ============ FORM ============ -->
+  <div class="panel">
+    <h2>Ticket details</h2>
+
+    <!-- ---- trip + passengers ---- -->
+    <details class="sect" open>
+      <summary>Trip &amp; passengers</summary>
+
+      <div class="field">
+        <label for="tripType">Trip type</label>
+        <select id="tripType">
+          <option value="oneway">One way</option>
+          <option value="round">Round trip</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Passengers</label>
+        <div class="pax-chips" id="paxChips"></div>
+        <div class="pax-actions">
+          <button class="ghost tiny" id="paxAdd">+ Add</button>
+          <button class="ghost tiny" id="paxDup">Duplicate</button>
+          <button class="ghost tiny" id="paxRemove">Remove</button>
+          <span class="pax-count" id="paxCount"></span>
+        </div>
+        <div class="hint">Download exports every passenger as its own PNG.</div>
+      </div>
+    </details>
+
+    <!-- ---- branding ---- -->
+    <details class="sect" open>
+      <summary>Airline &amp; styling</summary>
+
+      <div class="field">
+        <label for="airline">Airline</label>
+        <input id="airline" value="SKYLINE AIRWAYS" />
+      </div>
+
+      <div class="field">
+        <label for="font">Font</label>
+        <select id="font">
+          <option value="'Segoe UI', system-ui, Arial, sans-serif">Segoe UI (default)</option>
+          <option value="Arial, Helvetica, sans-serif">Arial</option>
+          <option value="Verdana, Geneva, sans-serif">Verdana</option>
+          <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+          <option value="Georgia, 'Times New Roman', serif">Georgia (serif)</option>
+          <option value="'Times New Roman', Times, serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New (mono)</option>
+          <option value="'Brush Script MT', cursive">Brush Script (script)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="logoSize">Logo font size — <span id="logoSizeVal">18</span>px</label>
+          <input id="logoSize" type="range" min="10" max="48" value="18"
+                 style="padding:0;height:38px;accent-color:var(--accent)" />
+        </div>
+        <div class="field">
+          <label for="logoColor">Logo / header color</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="logoColor" type="color" value="#e4002b" style="width:52px;padding:4px;height:38px;cursor:pointer" />
+            <input id="logoColorHex" value="#e4002b" maxlength="7" style="flex:1;text-transform:lowercase" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="logoTextColor">Logo text color</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="logoTextColor" type="color" value="#ffffff" style="width:52px;padding:4px;height:38px;cursor:pointer" />
+            <input id="logoTextColorHex" value="#ffffff" maxlength="7" style="flex:1;text-transform:lowercase" />
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ---- outbound route ---- -->
+    <details class="sect" open>
+      <summary>Route</summary>
+
+      <div class="row">
+        <div class="field">
+          <label for="flight">Flight no.</label>
+          <input id="flight" value="SK 284" />
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
+          <input id="date" type="date" value="2026-11-13" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="fromCode">From (code)</label>
+          <input id="fromCode" value="MEL" maxlength="4" />
+        </div>
+        <div class="field">
+          <label for="fromCity">From (city)</label>
+          <input id="fromCity" value="Melbourne" />
+        </div>
+        <div class="field" style="max-width:90px">
+          <label for="fromTerm">Terminal</label>
+          <input id="fromTerm" value="1" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="toCode">To (code)</label>
+          <input id="toCode" value="BNE" maxlength="4" />
+        </div>
+        <div class="field">
+          <label for="toCity">To (city)</label>
+          <input id="toCity" value="Brisbane" />
+        </div>
+        <div class="field" style="max-width:90px">
+          <label for="toTerm">Terminal</label>
+          <input id="toTerm" value="B" />
+        </div>
+      </div>
+
+      <div class="inline-warn" id="routeWarn" hidden>From and To must be different.</div>
+    </details>
+
+    <!-- ---- return leg ---- -->
+    <details class="sect" id="retBlock" hidden>
+      <summary>Return leg</summary>
+
+      <div class="row">
+        <div class="field">
+          <label for="retDate">Return date</label>
+          <input id="retDate" type="date" value="2026-11-20" />
+        </div>
+        <div class="field">
+          <label for="retFlight">Return flight no.</label>
+          <input id="retFlight" value="SK 285" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="retDep">Departure</label>
+          <input id="retDep" type="time" value="13:40" />
+        </div>
+        <div class="field">
+          <label for="retArr">Arrival</label>
+          <input id="retArr" type="time" value="15:35" />
+        </div>
+        <div class="field">
+          <label for="retDur">Duration</label>
+          <input id="retDur" value="2h 55m" />
+        </div>
+      </div>
+    </details>
+
+    <!-- ---- live search ---- -->
+    <details class="sect" open>
+      <summary>Find a flight</summary>
+
+      <!-- shown only when a live source is selected but no key is set yet -->
+      <div class="onboard" id="onboardBox" hidden>
+        <div class="ob-title">Connect real flights — free</div>
+        <ol class="ob-steps">
+          <li>Create a free account (100 requests/month, no credit card)</li>
+          <li>Open your dashboard and copy the <b>Access Key</b></li>
+          <li>Paste it into this app</li>
+        </ol>
+        <div class="ob-actions">
+          <a class="primary" id="obGetKey" href="https://aviationstack.com/signup/free"
+             target="_blank" rel="noopener">Get free key</a>
+          <button class="ghost" id="obPaste">I have a key — enter it</button>
+          <button class="ghost tiny" id="obDismiss">Keep using demo data</button>
+        </div>
+        <div class="hint">Free plan is for non-commercial use. Prices are not
+          included, so the fare shows “—”.</div>
+      </div>
+
+      <div class="field">
+        <div class="fr-searchbar">
+          <button class="ghost" id="searchBtn">Search flights</button>
+          <button class="ghost" id="searchDemoBtn" title="Ignore the live feed and generate demo flights">Demo list</button>
+        </div>
+        <div class="hint" id="searchHint" style="margin-bottom:8px">Uses the data source shown in the header.</div>
+        <div id="flightResults" class="flight-results">
+          <div class="fr-empty">Set From / To, then search.</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ---- times ---- -->
+    <details class="sect" open>
+      <summary>Times</summary>
+
+      <div class="row">
+        <div class="field">
+          <label for="dep">Departure</label>
+          <input id="dep" type="time" value="10:05" />
+        </div>
+        <div class="field">
+          <label for="arr">Arrival</label>
+          <input id="arr" type="time" value="12:00" />
+        </div>
+        <div class="field">
+          <label for="dur">Duration</label>
+          <input id="dur" value="2h 55m" />
+        </div>
+      </div>
+    </details>
+
+    <!-- ---- active passenger ---- -->
+    <details class="sect" open>
+      <summary>Passenger <span id="paxTitle" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0"></span></summary>
+
+      <div class="field">
+        <label for="passenger">Passenger name</label>
+        <input id="passenger" value="OLIVIA JOHN" />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="seat">Seat</label>
+          <input id="seat" value="14A" />
+        </div>
+        <div class="field">
+          <label for="gate">Gate</label>
+          <input id="gate" value="10" />
+        </div>
+        <div class="field">
+          <label for="class">Class</label>
+          <select id="class">
+            <option>Economy</option>
+            <option>Premium Economy</option>
+            <option>Business</option>
+            <option>First</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="boarding">Boarding time</label>
+          <input id="boarding" type="time" value="09:45" />
+        </div>
+        <div class="field">
+          <label for="group">Group</label>
+          <input id="group" value="2" />
+        </div>
+        <div class="field">
+          <label for="etkt">Ticket no. (ETKT)</label>
+          <input id="etkt" value="087-7532356789" />
+          <div class="hint" id="etktHint">Format: 000-0000000000</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ---- extras ---- -->
+    <details class="sect">
+      <summary>Ticket extras</summary>
+
+      <div class="field">
+        <label for="site">Website shown on ticket</label>
+        <input id="site" value="skyline.example" />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="fare">Fare (optional)</label>
+          <input id="fare" placeholder="e.g. $199" />
+        </div>
+        <div class="field">
+          <label for="seq">Sequence</label>
+          <input id="seq" value="03" />
+        </div>
+        <div class="field">
+          <label for="pnrcode">Booking ref</label>
+          <input id="pnrcode" value="X7Q2LM" maxlength="6" />
+          <div class="hint" id="pnrHint">6 letters or digits</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ---- background ---- -->
+    <details class="sect">
+      <summary>Download background</summary>
+
+      <div class="row">
+        <div class="field">
+          <label for="bg">Photo background (for download)</label>
+          <select id="bg">
+            <option value="">None (ticket only)</option>
+            <option value="table">Ticket on table</option>
+            <option value="bed">Ticket on bed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bgPhoto">…or use your own photo</label>
+          <input id="bgPhoto" type="file" accept="image/*" class="file-input" />
+        </div>
+      </div>
+    </details>
+
+    <div class="buttons">
+      <button class="primary" id="downloadBtn">Download PNG</button>
+      <button class="ghost" id="downloadAllBtn">Download all</button>
+      <button class="ghost" id="pdfBtn">Save as PDF</button>
+      <button class="ghost" id="randomBtn">Randomize</button>
+      <button class="ghost" id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+  <!-- ============ PREVIEW ============ -->
+  <div class="preview-wrap">
+    <div id="stage" class="stage-none">
+    <div id="ticket">
+      <div class="seq-tab"><span>SEQ No</span><strong id="tabSeq">1</strong></div>
+
+      <div class="pass">
+        <div class="main">
+          <div class="main-top">
+            <div class="brand" id="tBrand">Skyline Airways</div>
+            <div class="barcode barcode-h" id="barcode"></div>
+          </div>
+
+          <div class="route">
+            <div class="rt from">
+              <div class="rt-code" id="rFromCode">MEL</div>
+              <div class="rt-time" id="rDep">10:05</div>
+              <div class="rt-city" id="rFromCity2">Melbourne</div>
+            </div>
+            <div class="rt-mid">
+              <div class="rt-track"><i class="rt-plane">&#9992;</i></div>
+              <div class="rt-dur" id="rDur">2h 55m</div>
+            </div>
+            <div class="rt to">
+              <div class="rt-code" id="rToCode">BNE</div>
+              <div class="rt-time"><span id="rArr">12:00</span><sup class="rt-next" id="rNext" style="display:none">+1</sup></div>
+              <div class="rt-city" id="rToCity2">Brisbane</div>
+            </div>
+          </div>
+
+          <div class="ret-strip" id="retStrip" hidden>
+            <span class="rs-tag">RETURN</span>
+            <span><b id="rsFrom">BNE</b> &#9992; <b id="rsTo">MEL</b></span>
+            <span id="rsFlight">SK 285</span>
+            <span class="rs-date" id="rsDate">&mdash;</span>
+            <span id="rsTimes">13:40 &rarr; 15:35 (2h 55m)</span>
+          </div>
+
+          <div class="main-cols">
+            <div class="colA">
+              <div class="fld"><div class="k">Name</div><div class="v" id="tName">DOE/JOHN MR</div></div>
+              <div class="fld"><div class="k">Carrier</div><div class="v" id="tCarrier">SKYLINE AIRWAYS</div></div>
+              <div class="pair">
+                <div class="fld">
+                  <div class="k">From</div>
+                  <div class="v" id="tFromCity">Melbourne</div>
+                  <div class="s">Terminal <span id="tFromTerm">1</span></div>
+                </div>
+                <div class="fld">
+                  <div class="k">To</div>
+                  <div class="v" id="tToCity">Brisbane</div>
+                  <div class="s">Terminal <span id="tToTerm">B</span></div>
+                </div>
+              </div>
+              <div class="fld"><div class="k">Service Information</div><div class="v" id="gClass">Economy</div></div>
+              <div class="fld"><div class="k">ETKT</div><div class="v" id="gEtkt" style="font-size:13px">&mdash;</div></div>
+            </div>
+
+            <div class="colB">
+              <div class="pair">
+                <div class="fld"><div class="k">Flight</div><div class="v" id="gFlight">SK 284</div></div>
+                <div class="fld"><div class="k">Date</div><div class="v" id="tDate">&mdash;</div></div>
+              </div>
+              <div class="fld seat-big"><div class="k">Seat</div><div class="v" id="gSeat">14A</div></div>
+            </div>
+          </div>
+
+          <div class="main-bottom">
+            <div class="fld"><div class="k">Gate</div><div class="huge" id="gGate">10</div></div>
+            <div class="fld"><div class="k">Boarding Time</div><div class="huge" id="gBoard">09:45</div></div>
+            <div class="fld"><div class="k">Group</div><div class="mid" id="gGroup">2</div></div>
+            <div class="fld"><div class="k">Class</div><div class="mid" id="gClass2">Economy</div></div>
+            <div class="fld" id="fareFld" hidden><div class="k">Fare</div><div class="mid" id="gFare">&mdash;</div></div>
+          </div>
+
+          <div class="main-foot">
+            <span id="tSite">skyline.example</span>
+            <span id="tNotice">Boarding closes 20 minutes before departure</span>
+          </div>
+        </div>
+
+        <div class="stub">
+          <div class="fld"><div class="k">Name</div><div class="v" id="sName">DOE/JOHN MR</div></div>
+          <div class="pair">
+            <div class="fld"><div class="k">Flight</div><div class="v" id="sFlightN">SK 284</div></div>
+            <div class="fld"><div class="k">Date</div><div class="v" id="sDate">&mdash;</div></div>
+          </div>
+          <div class="pair" style="align-items:flex-end">
+            <div class="fld seat-stub"><div class="k">Seat</div><div class="v" id="sSeat">14A</div></div>
+            <div class="fld"><div class="k">Class</div><div class="v" id="sClass">Economy</div></div>
+          </div>
+          <div class="pair">
+            <div class="fld"><div class="k">From</div><div class="v" id="sFrom">MEL</div><div class="s">Terminal <span id="sFromTerm">1</span></div></div>
+            <div class="fld"><div class="k">To</div><div class="v" id="sTo">BNE</div><div class="s">Terminal <span id="sToTerm">B</span></div></div>
+            <div class="fld"><div class="k">SEQ No</div><div class="v" id="gSeq">03</div></div>
+          </div>
+          <div class="fld"><div class="k">Carrier</div><div class="v" id="sCarrier">SKYLINE</div></div>
+
+          <div class="stub-foot">
+            <canvas id="qrCanvas" width="76" height="76" aria-label="QR code with booking details"></canvas>
+            <div class="barcode barcode-bottom" id="barcodeStub"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /stage -->
+  </div>
+</div>
+
+<!-- ============ TEMPLATES + HISTORY ============ -->
+<section class="panel library" id="libraryPanel">
+  <div class="lib-col">
+    <h2>Saved templates</h2>
+    <div class="lib-list" id="tplList">
+      <div class="lib-empty">No templates yet.</div>
+    </div>
+    <div class="lib-save">
+      <input id="tplName" placeholder="Template name (e.g. MEL–BNE work trip)" />
+      <button class="primary tiny" id="tplSave">Save</button>
+    </div>
+  </div>
+
+  <div class="lib-col">
+    <h2>Recent tickets</h2>
+    <div class="lib-list" id="histList">
+      <div class="lib-empty">Nothing generated yet.</div>
+    </div>
+    <div class="buttons" style="margin-top:0">
+      <button class="ghost tiny" id="histClear">Clear history</button>
+    </div>
+  </div>
+</section>
+
+<!-- html-to-image for PNG export (UMD build) — bundled locally, CDN as fallback -->
+<script src="html-to-image.js"></script>
+<!-- qrcode-generator 1.4.4 (MIT, Kazuhiko Arase) — bundled locally, CDN as fallback -->
+<script src="qrcode.js"></script>
+<script src="flight-api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

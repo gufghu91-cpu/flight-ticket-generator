@@ -1,0 +1,437 @@
+:root {
+  --ink: #12213a;
+  --accent: #1f6feb;
+  --paper: #ffffff;
+  --muted: #6b7a92;
+  --line: #d9e1ec;
+}
+* { box-sizing: border-box; }
+/* iOS inflates text when rotating unless this is pinned */
+html { -webkit-text-size-adjust: 100%; }
+/* author display rules would otherwise win over the UA rule for [hidden] */
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  background: linear-gradient(160deg, #eef3fb, #dfe8f6);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 24px;
+}
+h1 { font-size: 22px; margin: 0 0 4px; }
+p.sub { color: var(--muted); margin: 0; font-size: 14px; }
+.layout { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; margin-top: 20px; }
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  flex: 1 1 300px;
+  min-width: 300px;
+  max-width: 420px;
+  box-shadow: 0 6px 24px rgba(18, 33, 58, 0.07);
+}
+.panel h2 { font-size: 15px; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+.row { display: flex; gap: 10px; }
+.field { margin-bottom: 12px; flex: 1; }
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+label a { color: var(--accent); }
+input, select {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fbfdff;
+  color: var(--ink);
+}
+input:focus, select:focus { outline: 2px solid #bcd4ff; border-color: var(--accent); }
+.buttons { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+button:disabled { opacity: .55; cursor: not-allowed; }
+.primary { background: var(--accent); color: #fff; }
+.primary:hover { background: #1857c4; }
+.ghost { background: #eef2f8; color: var(--ink); }
+.ghost:hover { background: #e2e8f2; }
+.tiny { padding: 5px 9px; font-size: 12px; }
+.warning {
+  background: #fff6e5;
+  border: 1px solid #f2d49b;
+  color: #7a5300;
+  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.inline-warn {
+  background: #fff1f1;
+  border: 1px solid #f3c2c2;
+  color: #a11;
+  font-size: 11px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin: -4px 0 12px;
+  line-height: 1.4;
+}
+.hint { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.hint.bad { color: #c62828; font-weight: 600; }
+input.bad { border-color: #e57373; background: #fff6f6; }
+/* file pickers keep the compact desktop look (class, not inline style, so
+   the phone media query below can still raise the font size) */
+.file-input { padding: 7px; background: #fbfdff; font-size: 12px; }
+.preview-wrap { flex: 1 1 560px; min-width: 320px; }
+
+/* ---------- header ---------- */
+.app-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.head-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.src-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  padding: 5px 10px; border-radius: 999px;
+  background: #eef2f8; color: var(--muted); border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.src-badge.live { background: #e7f7ec; color: #14683a; border-color: #a9ddbd; }
+.src-badge.demo { background: #fff6e5; color: #7a5300; border-color: #f2d49b; }
+.src-badge.err  { background: #fff1f1; color: #a11; border-color: #f3c2c2; }
+
+/* ---------- settings / collapsible sections ---------- */
+.panel.settings { max-width: 100%; width: 100%; margin-bottom: 0; }
+.api-status { font-size: 12px; margin-top: 10px; line-height: 1.5; }
+.api-status.ok { color: #14683a; }
+.api-status.bad { color: #a11; }
+.api-note { font-size: 11px; color: var(--muted); line-height: 1.55; margin: 10px 0 0; }
+
+details.sect {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 12px 4px;
+  margin-bottom: 12px;
+  background: #fbfdff;
+}
+details.sect > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--accent);
+  padding: 11px 0;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+details.sect > summary::-webkit-details-marker { display: none; }
+details.sect > summary::after { content: "+"; font-size: 15px; color: var(--muted); }
+details.sect[open] > summary::after { content: "\2212"; }
+details.sect[open] > summary { margin-bottom: 8px; }
+details.sect .field:last-child { margin-bottom: 8px; }
+
+/* ---------- passengers ---------- */
+.pax-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.pax-chip {
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+  border-radius: 999px; padding: 5px 11px; font-size: 12px; cursor: pointer;
+  max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pax-chip:hover { border-color: var(--accent); }
+.pax-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pax-actions { display: flex; gap: 8px; }
+.pax-count { font-size: 11px; color: var(--muted); margin-left: auto; align-self: center; }
+
+/* ---------- library (templates + history) ---------- */
+.library { display: flex; gap: 24px; flex-wrap: wrap; max-width: none; width: 100%; margin-top: 24px; }
+.lib-col { flex: 1 1 300px; min-width: 280px; }
+.lib-list { display: flex; flex-direction: column; gap: 6px; max-height: 210px; overflow-y: auto; margin-bottom: 10px; }
+.lib-empty { font-size: 12px; color: var(--muted); padding: 6px 0; }
+.lib-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+  background: #fff; font-size: 12px;
+}
+.lib-item .li-main { min-width: 0; }
+.lib-item .li-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-item .li-sub { color: var(--muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-item .li-actions { display: flex; gap: 5px; flex: none; }
+.lib-save { display: flex; gap: 8px; }
+.lib-save input { flex: 1; }
+
+/* ---------- flight-data onboarding ---------- */
+.onboard {
+  border: 1px solid #bcd4ff;
+  background: #f2f7ff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.ob-title { font-size: 13px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+.ob-steps { margin: 0 0 10px 18px; padding: 0; font-size: 12px; color: #333; line-height: 1.7; }
+.ob-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ob-actions a.primary {
+  display: inline-block; text-decoration: none; background: var(--accent);
+  color: #fff; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+}
+.ob-actions a.primary:hover { background: #1857c4; }
+.onboard .hint { margin-top: 8px; }
+
+/* ---------- emulated flight list ---------- */
+.flight-results { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.fr-empty { font-size: 12px; color: var(--muted); padding: 8px 0; line-height: 1.5; }
+.fr-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  background: #fbfdff; cursor: pointer; font-size: 12px;
+}
+.fr-item:hover { border-color: var(--accent); background: #f2f7ff; }
+.fr-item .fr-time { font-weight: 700; font-size: 13px; color: var(--ink); }
+.fr-item .fr-meta { color: var(--muted); }
+.fr-item .fr-price { font-weight: 700; color: var(--accent); white-space: nowrap; }
+.fr-item .fr-seats { font-size: 10px; color: #b25b00; }
+.fr-tag {
+  display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .04em;
+  padding: 1px 5px; border-radius: 4px; vertical-align: 1px;
+}
+.fr-tag.live { background: #e7f7ec; color: #14683a; }
+.fr-tag.demo { background: #fff6e5; color: #7a5300; }
+.fr-searchbar { display: flex; gap: 8px; margin-bottom: 8px; }
+.fr-searchbar button { flex: 1; }
+
+/* ---------- Download backgrounds ---------- */
+#stage {
+  padding: 0;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: box-shadow .2s;
+}
+#stage.stage-none { background: transparent; }
+#stage.stage-table {
+  padding: 46px;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 2px, transparent 2px 130px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 7px),
+    linear-gradient(100deg, #8a5a33 0%, #a06a3e 25%, #7d4f2c 55%, #96633a 80%, #6f4526 100%);
+  box-shadow: inset 0 0 90px rgba(0,0,0,.35);
+}
+#stage.stage-bed {
+  padding: 54px;
+  background-image:
+    repeating-linear-gradient(48deg, rgba(0,0,0,.045) 0 3px, transparent 3px 26px),
+    repeating-linear-gradient(-42deg, rgba(255,255,255,.5) 0 4px, transparent 4px 30px),
+    radial-gradient(ellipse at 30% 20%, #ffffff 0%, #eef1f6 45%, #d9dfe9 100%);
+  box-shadow: inset 0 0 120px rgba(120,135,160,.35);
+}
+#stage.stage-custom {
+  padding: 46px;
+  background-image: var(--custom-bg);
+}
+
+/* ---------- Ticket (pass style) ---------- */
+#ticket {
+  background: var(--paper);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(18, 33, 58, 0.15);
+  border: 1px solid var(--line);
+  position: relative;
+  font-family: "Segoe UI", Arial, sans-serif;
+  display: flex;
+  min-height: 300px;
+}
+/* left colored tab with SEQ No */
+.seq-tab {
+  width: 54px;
+  flex: none;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 26px;
+  font-size: 10px;
+  letter-spacing: .04em;
+  gap: 2px;
+}
+.seq-tab strong { font-size: 20px; font-weight: 700; }
+
+.pass { flex: 1; display: flex; min-width: 0; }
+.main { flex: 2.3; padding: 16px 18px 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.main-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.main-top .brand { font-weight: 800; letter-spacing: .02em; line-height: 1.1; color: var(--accent); text-transform: uppercase;
+  /* the name keeps its own line; it only truncates if wider than the ticket itself */
+  flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- route + times hero row ---------- */
+.route {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 14px;
+  background: #fbfdff;
+}
+.route .rt { min-width: 0; }
+.route .rt.to { text-align: right; }
+.rt-code { font-size: 28px; font-weight: 800; line-height: 1.05; letter-spacing: .02em; }
+.rt-time { font-size: 17px; font-weight: 700; color: var(--accent); }
+.rt-city {
+  font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .04em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rt-next { font-size: 10px; font-weight: 700; color: #b25b00; margin-left: 3px; }
+.rt-mid { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 132px; }
+.rt-track { width: 100%; display: flex; align-items: center; gap: 6px; color: var(--accent); }
+.rt-track::before, .rt-track::after { content: ""; flex: 1; border-top: 2px dotted var(--line); }
+.rt-plane { font-size: 13px; line-height: 1; font-style: normal; }
+.rt-dur { font-size: 11px; font-weight: 600; color: #555; }
+
+/* ---------- return leg strip (round trip) ---------- */
+.ret-strip {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  border: 1px dashed var(--accent); border-radius: 10px;
+  padding: 6px 12px; background: #f7faff;
+  font-size: 11px; color: #333;
+}
+.ret-strip .rs-tag {
+  font-size: 9px; font-weight: 800; letter-spacing: .08em;
+  background: var(--accent); color: #fff; border-radius: 4px; padding: 2px 6px;
+}
+.ret-strip b { font-size: 12px; }
+.ret-strip .rs-date { font-weight: 700; }
+
+.k { font-size: 10px; color: #555; letter-spacing: .02em; }
+.v { font-size: 15px; font-weight: 700; text-transform: uppercase; line-height: 1.25; }
+.s { font-size: 11px; color: #555; }
+.fld { margin-bottom: 7px; }
+
+.main-cols { display: flex; gap: 34px; flex: 1; }
+.colA { flex: 1.5; }
+.colB { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+.pair { display: flex; gap: 34px; flex-wrap: wrap; }
+.stub .pair { gap: 26px; }
+/* extra breathing room between From and To */
+.colA .pair .fld { min-width: 150px; }
+.colA .pair .fld + .fld { border-left: 1px solid var(--line); padding-left: 34px; }
+.seat-big .v { font-size: 38px; font-weight: 800; line-height: 1; }
+
+.main-bottom {
+  display: flex; gap: 26px; align-items: flex-end; flex-wrap: wrap;
+  border-top: 1px solid var(--line); padding-top: 8px;
+}
+.main-bottom .huge { font-size: 26px; font-weight: 800; line-height: 1.1; }
+.main-bottom .mid { font-size: 19px; font-weight: 700; }
+.main-foot {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 10px; color: #555;
+  border-top: 1px solid var(--line); padding-top: 6px;
+}
+
+.stub {
+  flex: 1;
+  border-left: 2px dashed var(--line);
+  padding: 16px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.stub .seat-stub .v { font-size: 34px; font-weight: 800; line-height: 1; }
+.barcode { display: flex; gap: 2px; height: 50px; align-items: stretch; }
+.barcode i { display: block; background: #12213a; }
+.barcode-h {
+  width: 240px; height: 46px;
+  flex: 0 1 auto;            /* shrink before the airline name does… */
+  min-width: 60px;           /* …but never vanish */
+  margin-left: auto;         /* right-aligned when it wraps onto its own line */
+  overflow: hidden;          /* bars clip rather than spill */
+}
+.barcode-bottom { margin-top: auto; height: 44px; flex: 1; min-width: 0; }
+
+/* ---------- QR + barcode footer ---------- */
+.stub-foot { display: flex; gap: 10px; align-items: flex-end; margin-top: auto; padding-top: 8px; }
+#qrCanvas {
+  width: 76px; height: 76px; flex: none;
+  image-rendering: pixelated;
+  border: 1px solid var(--line); border-radius: 4px; background: #fff;
+}
+.qr-fallback { font-size: 9px; color: #c62828; width: 76px; flex: none; }
+
+@media (max-width: 640px) {
+  /* ---------------- page frame: reclaim the desktop padding --------------- */
+  body { padding: 12px; }
+  h1 { font-size: 19px; }
+  p.sub { font-size: 13px; }
+  .layout { gap: 14px; margin-top: 14px; }
+  .panel { flex: 1 1 100%; min-width: 0; max-width: 100%; padding: 14px; }
+  .preview-wrap { flex: 1 1 100%; min-width: 0; }
+  .library { gap: 14px; margin-top: 14px; }
+  .lib-col { flex: 1 1 100%; min-width: 0; }
+
+  /* ------------ iOS Safari auto-zooms any input under 16px --------------- */
+  input, select { font-size: 16px; padding: 11px 10px; }
+  .file-input { font-size: 16px; padding: 11px 10px; }
+  label { font-size: 13px; }
+  .hint { font-size: 11px; }
+
+  /* ------------------------- tap targets (≥44px) ------------------------ */
+  button { padding: 14px 16px; font-size: 15px; }
+  button.tiny { padding: 14px 14px; font-size: 13px; }
+  .pax-chip { padding: 13px 14px; font-size: 13px; }
+  .ob-actions a.primary { padding: 12px 16px; }
+  details.sect > summary { padding: 14px 0; }
+
+  /* ------------- 3-across field rows are unusable — let them wrap -------- */
+  .row { flex-wrap: wrap; }
+  .row .field { flex: 1 1 140px; }
+  .row .field[style*="max-width"] { flex: 0 1 90px; }
+
+  /* ---------------- ticket: fields are stacked, not side-by-side --------- */
+  .main-cols { flex-direction: column; gap: 16px; }
+  .pair { gap: 20px; }
+  .colA .pair .fld { min-width: 0; flex: 1 1 100%; }
+  /* the vertical divider was for a side-by-side pair — use a horizontal rule */
+  .colA .pair .fld + .fld {
+    border-left: 0; padding-left: 0;
+    border-top: 1px solid var(--line); padding-top: 7px;
+  }
+  .main-bottom { gap: 14px; }
+
+  /* -------------------------- ticket above (already) --------------------- */
+  #ticket { flex-direction: column; }
+  .seq-tab { width: 100%; flex-direction: row; justify-content: flex-start; gap: 8px; padding: 6px 14px; }
+  .pass { flex-direction: column; }
+  .main { padding-bottom: 16px; }
+  .stub { border-left: 0; border-top: 2px dashed var(--line); }
+  .barcode-h { width: 100%; }
+  .route { gap: 8px; padding: 8px 10px; }
+  .rt-code { font-size: 22px; }
+  .rt-mid { min-width: 74px; }
+  .library { flex-direction: column; }
+}
+
+/* ---------- print: ticket only ---------- */
+@media print {
+  body { background: #fff; padding: 0; }
+  .app-head, .panel, .library, .src-badge, details.sect { display: none !important; }
+  .layout { display: block; margin: 0; }
+  .preview-wrap { min-width: 0; width: 100%; }
+  /* the photo backdrop is for downloads only — drop it on paper */
+  #stage, #stage.stage-table, #stage.stage-bed, #stage.stage-custom {
+    padding: 0 !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+  #ticket { box-shadow: none; page-break-inside: avoid; break-inside: avoid; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
