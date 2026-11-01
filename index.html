@@ -60,6 +60,40 @@
   <p class="api-note" id="apiNote"></p>
 </section>
 
+<!-- ============ AVAILABLE FLIGHTS (top level — always visible) ============ -->
+<section class="panel find-flight" id="flightsPanel">
+  <h2>Available flights</h2>
+
+  <!-- shown only when a live source is selected but no key is set yet -->
+  <div class="onboard" id="onboardBox" hidden>
+    <div class="ob-title">Connect real flights — free</div>
+    <ol class="ob-steps">
+      <li>Create a free account (100 requests/month, no credit card)</li>
+      <li>Open your dashboard and copy the <b>Access Key</b></li>
+      <li>Paste it into this app</li>
+    </ol>
+    <div class="ob-actions">
+      <a class="primary" id="obGetKey" href="https://aviationstack.com/signup/free"
+         target="_blank" rel="noopener">Get free key</a>
+      <button class="ghost" id="obPaste">I have a key — enter it</button>
+      <button class="ghost tiny" id="obDismiss">Keep using demo data</button>
+    </div>
+    <div class="hint">Free plan is for non-commercial use. Prices are not
+      included, so the fare shows “—”.</div>
+  </div>
+
+  <div class="field">
+    <div class="fr-searchbar">
+      <button class="ghost" id="searchBtn">Search flights</button>
+      <button class="ghost" id="searchDemoBtn" title="Ignore the live feed and generate demo flights">Demo list</button>
+    </div>
+    <div class="hint" id="searchHint" style="margin-bottom:8px">Uses the data source shown in the header.</div>
+    <div id="flightResults" class="flight-results">
+      <div class="fr-empty">Set From / To, then search.</div>
+    </div>
+  </div>
+</section>
+
 <div class="layout">
 
   <!-- ============ FORM ============ -->
@@ -212,40 +246,6 @@
         <div class="field">
           <label for="retDur">Duration</label>
           <input id="retDur" value="2h 55m" />
-        </div>
-      </div>
-    </details>
-
-    <!-- ---- live search ---- -->
-    <details class="sect" open>
-      <summary>Find a flight</summary>
-
-      <!-- shown only when a live source is selected but no key is set yet -->
-      <div class="onboard" id="onboardBox" hidden>
-        <div class="ob-title">Connect real flights — free</div>
-        <ol class="ob-steps">
-          <li>Create a free account (100 requests/month, no credit card)</li>
-          <li>Open your dashboard and copy the <b>Access Key</b></li>
-          <li>Paste it into this app</li>
-        </ol>
-        <div class="ob-actions">
-          <a class="primary" id="obGetKey" href="https://aviationstack.com/signup/free"
-             target="_blank" rel="noopener">Get free key</a>
-          <button class="ghost" id="obPaste">I have a key — enter it</button>
-          <button class="ghost tiny" id="obDismiss">Keep using demo data</button>
-        </div>
-        <div class="hint">Free plan is for non-commercial use. Prices are not
-          included, so the fare shows “—”.</div>
-      </div>
-
-      <div class="field">
-        <div class="fr-searchbar">
-          <button class="ghost" id="searchBtn">Search flights</button>
-          <button class="ghost" id="searchDemoBtn" title="Ignore the live feed and generate demo flights">Demo list</button>
-        </div>
-        <div class="hint" id="searchHint" style="margin-bottom:8px">Uses the data source shown in the header.</div>
-        <div id="flightResults" class="flight-results">
-          <div class="fr-empty">Set From / To, then search.</div>
         </div>
       </div>
     </details>

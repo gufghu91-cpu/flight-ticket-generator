@@ -104,6 +104,11 @@ input.bad { border-color: #e57373; background: #fff6f6; }
 
 /* ---------- settings / collapsible sections ---------- */
 .panel.settings { max-width: 100%; width: 100%; margin-bottom: 0; }
+
+/* Available flights: a top-level, full-width band above the form + ticket so
+   results are visible without collapsing/expanding anything. */
+.panel.find-flight { max-width: 100%; width: 100%; margin-top: 20px; }
+.panel.find-flight .flight-results { max-height: 340px; }
 .api-status { font-size: 12px; margin-top: 10px; line-height: 1.5; }
 .api-status.ok { color: #14683a; }
 .api-status.bad { color: #a11; }
