@@ -677,12 +677,14 @@ function renderResults(rows, source) {
   renderRows(rows, source);
 }
 
-/* Prepend a failure notice, then whatever fallback list we still have. */
+/* Prepend a failure notice, then whatever fallback list we still have.
+   Uses .fr-notice (red, bordered) — not .fr-empty, which is muted grey and
+   read as "nothing happened". */
 function renderWithNotice(noticeHtml, rows, source) {
   var box = $('flightResults');
   box.innerHTML = '';
   var msg = document.createElement('div');
-  msg.className = 'fr-empty';
+  msg.className = 'fr-notice';
   msg.innerHTML = noticeHtml;
   box.appendChild(msg);
   if (rows && rows.length) renderRows(rows, source);
@@ -738,10 +740,30 @@ function runSearch() {
     },
     function (err) {
       /* fall back to the demo list so the app is never a dead end */
-      var notice =
-        '<strong>Live search failed — showing demo flights instead.</strong><br>' +
-        escapeHtml(err.message || 'Unknown error.') +
-        (err.hint ? '<br><span style="color:#a11">' + escapeHtml(err.hint) + '</span>' : '');
+      var isThrottle = err.code === 'throttle';
+      var prev = (isThrottle && window.FlightAPI.lastError)
+        ? window.FlightAPI.lastError()
+        : null;
+
+      var notice;
+      if (prev) {
+        /* A throttle message must never bury the actual cause — lead with it,
+           and keep the banner short enough to fit the scroll-capped box. */
+        notice =
+          '<strong>Live search failed — showing demo flights instead.</strong><br>' +
+          escapeHtml(prev.message) +
+          (prev.hint ? '<br><span class="fr-hint">' + escapeHtml(prev.hint) + '</span>' : '') +
+          '<div class="fr-sub">' + escapeHtml(err.message || 'Please wait a moment.') +
+          ' — searching again will not clear this on its own. Fix the key or the ' +
+          'date above first.</div>';
+      } else {
+        notice =
+          '<strong>' + (isThrottle
+            ? 'Live search paused — showing demo flights instead.'
+            : 'Live search failed — showing demo flights instead.') + '</strong><br>' +
+          escapeHtml(err.message || 'Unknown error.') +
+          (err.hint ? '<br><span class="fr-hint">' + escapeHtml(err.hint) + '</span>' : '');
+      }
 
       window.FlightAPI.demoSearch(searchParams()).then(
         function (demoRows) { renderWithNotice(notice, demoRows, 'demo'); },
@@ -1032,6 +1054,7 @@ $('obPaste').addEventListener('click', function () {
 $('obDismiss').addEventListener('click', function () {
   onboardDismissed = true;
   window.FlightAPI.set('provider', 'demo');
+  window.FlightAPI.clearLastError();
   syncSettingsUi();
 });
 
@@ -1051,7 +1074,9 @@ function syncSettingsUi() {
   $('apiNote').textContent = info.note;
 
   if (window.FlightAPI.get('provider') === 'demo') setBadge('demo', 'Demo data');
-  else if (window.FlightAPI.hasKey()) setBadge('live', 'Live · ' + shortProvider());
+  /* "ready" — a key is configured, but nothing has been fetched yet. The badge
+     only says "Live" after a search actually returns real rows. */
+  else if (window.FlightAPI.hasKey()) setBadge('live', shortProvider() + ' · ready');
   else setBadge('err', 'Live · key missing');
 
   $('searchHint').textContent = searchHint();
@@ -1066,15 +1091,19 @@ $('settingsBtn').addEventListener('click', function () {
 
 $('apiProvider').addEventListener('change', function () {
   window.FlightAPI.set('provider', $('apiProvider').value);
+  /* leaving the live source makes the old failure irrelevant */
+  if ($('apiProvider').value === 'demo') window.FlightAPI.clearLastError();
   syncSettingsUi();
 });
 $('apiKey').addEventListener('input', function () {
   window.FlightAPI.set('key', $('apiKey').value.trim());
+  /* a different key deserves a fresh diagnosis, not a stale one */
+  window.FlightAPI.clearLastError();
   $('searchHint').textContent = searchHint();
   syncOnboard();
   if (window.FlightAPI.get('provider') !== 'demo') {
     setBadge(window.FlightAPI.hasKey() ? 'live' : 'err',
-             window.FlightAPI.hasKey() ? 'Live · ' + shortProvider() : 'Live · key missing');
+             window.FlightAPI.hasKey() ? shortProvider() + ' · ready' : 'Live · key missing');
   }
 });
 $('apiEndpoint').addEventListener('input', function () {

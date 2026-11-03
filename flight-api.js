@@ -19,6 +19,7 @@
   var CFG_KEY    = 'flight-ticket-generator:api';
   var CACHE_KEY  = 'flight-ticket-generator:apicache';
   var LAST_KEY   = 'flight-ticket-generator:lastcall';
+  var LASTERR_KEY = 'flight-ticket-generator:lasterror';
   var CACHE_TTL  = 15 * 60 * 1000;
   var MIN_GAP_MS = 60 * 1000;   /* Aviationstack free plan: 1 request / 60 s */
 
@@ -165,6 +166,58 @@
     try { localStorage.setItem(LAST_KEY, String(Date.now())); } catch (e) {}
   }
 
+  /* Remember the real reason the last live call failed.
+     Without this, every search during the 60s throttle window replaces the
+     genuine error with "please wait", so the cause is never readable. */
+  function rememberError(err) {
+    if (!err || err.code === 'throttle') return;
+    try {
+      localStorage.setItem(LASTERR_KEY, JSON.stringify({
+        code: err.code || 'error',
+        message: err.message || '',
+        hint: err.hint || '',
+        at: Date.now()
+      }));
+    } catch (e) {}
+  }
+  function forgetError() {
+    try { localStorage.removeItem(LASTERR_KEY); } catch (e) {}
+  }
+  function readError() {
+    try {
+      var e = JSON.parse(localStorage.getItem(LASTERR_KEY) || 'null');
+      if (e && e.message) return e;
+    } catch (err) {}
+    return null;
+  }
+
+  /* Is this the free plan refusing a parameter (schedules/future flights are
+     a paid feature)? */
+  function paramRestricted(err) {
+    var code = String((err && err.code) || '');
+    var msg  = String((err && err.message) || '');
+    return code === 'function_access_restricted' ||
+           /does not support this API function/i.test(msg);
+  }
+
+  /* Attach a plain-English explanation to errors the API only codes. */
+  function enrich(err) {
+    if (!err || err.hint) return err;
+    if (paramRestricted(err)) {
+      err.hint = 'The free plan includes real-time flights only — flight dates, ' +
+                 'schedules and future flights are a paid feature. Clear the Date ' +
+                 'field and search by route or flight number instead.';
+    } else if (/https_access_restricted/.test(String(err.code || ''))) {
+      err.hint = 'The free plan is refusing HTTPS on this request. This page is ' +
+                 'served over HTTPS, which browsers require, so this key cannot ' +
+                 'work here without a proxy.';
+    } else if (err.code === 'invalid_access_key') {
+      err.hint = 'Re-copy the Access Key from your Aviationstack dashboard and ' +
+                 'paste it again.';
+    }
+    return err;
+  }
+
   /* =============================== DEMO DATA ============================= */
   /* Fictional demo data, not a real booking feed. Seeded by route so the
      same From/To always returns the same five flights, sorted by departure. */
@@ -257,9 +310,19 @@
         &flight_date=&limit=                                        (CORS: *) */
   var AV_BASE = 'https://api.aviationstack.com/v1/flights';
 
+  function avCall(url) {
+    return httpJson(url, { headers: {} }).then(function (json) {
+      if (json && json.error) {
+        throw enrich(apiError(json.error.code || 'api-error',
+          json.error.message || 'Aviationstack returned an error.'));
+      }
+      return (json && json.data) || [];
+    });
+  }
+
   function aviationstackSearch(p) {
     var q = new URLSearchParams();
-    q.set('access_key', cfg.key);
+    q.set('access_key', String(cfg.key || '').trim());
     q.set('limit', '10');
 
     var flightCode = normFlightNo(p.flightNo);
@@ -270,24 +333,27 @@
       q.set('dep_iata', String(p.from || '').trim().toUpperCase());
       q.set('arr_iata', String(p.to || '').trim().toUpperCase());
     }
-    if (p.date) q.set('flight_date', p.date);
+    var hadDate = !!p.date;
+    if (hadDate) q.set('flight_date', p.date);
 
-    return httpJson(AV_BASE + '?' + q.toString(), { headers: {} })
-      .then(function (json) {
-        if (json && json.error) {
-          throw apiError(json.error.code || 'api-error',
-            json.error.message || 'Aviationstack returned an error.');
-        }
-        var rows = (json && json.data) || [];
-        return rows.map(mapAviationstack).filter(Boolean).map(function (f) {
-          /* searching by flight number returns any route — only fill the
-             codes the payload did not already give us */
-          if (!f.fromCode && p.from) f.fromCode = p.from;
-          if (!f.toCode && p.to)     f.toCode   = p.to;
-          f.currency = cfg.currency;
-          return f;
-        });
+    return avCall(AV_BASE + '?' + q.toString()).then(null, function (err) {
+      /* Free plans sometimes reject the date filter outright. Retry once
+         without it rather than dropping to the demo list for a fixable reason. */
+      if (hadDate && paramRestricted(err)) {
+        q.delete('flight_date');
+        return avCall(AV_BASE + '?' + q.toString());
+      }
+      throw enrich(err);
+    }).then(function (rows) {
+      return rows.map(mapAviationstack).filter(Boolean).map(function (f) {
+        /* searching by flight number returns any route — only fill the
+           codes the payload did not already give us */
+        if (!f.fromCode && p.from) f.fromCode = p.from;
+        if (!f.toCode && p.to)     f.toCode   = p.to;
+        f.currency = cfg.currency;
+        return f;
       });
+    });
   }
 
   function mapAviationstack(r) {
@@ -409,9 +475,18 @@
         try { body = text ? JSON.parse(text) : null; } catch (e) { /* non-JSON */ }
 
         if (res.status === 401 || res.status === 403) {
-          throw apiError('unauthorized',
-            'The API rejected the key (HTTP ' + res.status + ').',
-            'Check the key is correct, active and for the right environment.');
+          var apiMsg = body && body.error && body.error.message;
+          var e = apiError(
+            (body && body.error && body.error.code) || 'unauthorized',
+            'The API rejected the key (HTTP ' + res.status + ').' +
+              (apiMsg ? ' ' + apiMsg : '')
+          );
+          enrich(e);
+          if (!e.hint) {
+            e.hint = 'Re-copy the Access Key from your Aviationstack dashboard ' +
+                     'and paste it again — this key was refused outright.';
+          }
+          throw e;
         }
         if (res.status === 429) {
           throw apiError('rate-limit',
@@ -450,6 +525,10 @@
     providerInfo: function () { return PROVIDERS[cfg.provider] || PROVIDERS.demo; },
     hasKey: function () { return !!String(cfg.key || '').trim(); },
 
+    /* Why the last real live call failed (null once a call succeeds). */
+    lastError: readError,
+    clearLastError: forgetError,
+
     /* Milliseconds until the next live call is allowed (0 = go ahead). */
     throttleRemaining: function () {
       if (cfg.provider === 'demo') return 0;
@@ -485,13 +564,15 @@
 
       return fn(p).then(function (rows) {
         markCall();
+        forgetError();                 /* a good call clears the old failure */
         cacheSet(ck, rows);
         return rows;
       }, function (err) {
         /* 4xx/5xx mean we made a real call, so consume the minute anyway —
            but a network failure never reached them, so don't throttle it. */
         if (err.code !== 'network') markCall();
-        throw err;
+        rememberError(err);
+        throw enrich(err);
       });
     },
 
@@ -511,17 +592,16 @@
 
       if (provider === 'aviationstack') {
         var q = new URLSearchParams();
-        q.set('access_key', cfg.key);
+        q.set('access_key', String(cfg.key || '').trim());
         q.set('limit', '1');
-        return httpJson(AV_BASE + '?' + q.toString(), { headers: {} })
-          .then(function (json) {
-            if (json && json.error) {
-              throw apiError(json.error.code || 'api-error', json.error.message);
-            }
-            markCall();
-            var n = ((json && json.data) || []).length;
-            return { message: 'Key accepted. Sample rows returned: ' + n + '.' };
-          });
+        return avCall(AV_BASE + '?' + q.toString()).then(function (rows) {
+          markCall();
+          forgetError();
+          return { message: 'Key accepted. Sample rows returned: ' + rows.length + '.' };
+        }, function (err) {
+          rememberError(err);
+          throw enrich(err);
+        });
       }
       return tequilaSearch(p).then(function (rows) {
         markCall();

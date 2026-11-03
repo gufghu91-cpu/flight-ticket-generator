@@ -190,6 +190,28 @@ details.sect .field:last-child { margin-bottom: 8px; }
 /* ---------- emulated flight list ---------- */
 .flight-results { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
 .fr-empty { font-size: 12px; color: var(--muted); padding: 8px 0; line-height: 1.5; }
+
+/* Failure banner — deliberately loud. It used to reuse the muted .fr-empty
+   style, so a real live error read as "nothing happened". */
+.fr-notice {
+  background: #fff5f5;
+  border: 1px solid #f0b8be;
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #7a1723;
+  overflow-wrap: anywhere;
+}
+.fr-notice strong { color: #a11; }
+.fr-notice .fr-hint { color: #a11; display: block; margin-top: 3px; }
+.fr-sub {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #eeb9c0;
+  color: #7a1723;
+}
 .fr-item {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
